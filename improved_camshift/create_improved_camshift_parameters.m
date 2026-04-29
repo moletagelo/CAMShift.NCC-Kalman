@@ -8,9 +8,13 @@ end
 params = struct();
 params.methodName = 'Improved CAMshift';
 params.searchRadius = 30;
+params.maxSearchRadius = 60;
 params.templateUpdateAlpha = 0.05;
 params.minUpdateConfidence = 0.35;
 params.minDetectionConfidence = 0.10;
+params.templateScales = [0.95, 1.00, 1.05];
+params.searchRadiusGrowthPerMiss = 8;
+params.maxConsecutiveMisses = 4;
 params.dt = 1.0;
 params.transitionMatrix = [1, 0, 1, 0; ...
                            0, 1, 0, 1; ...
@@ -21,6 +25,7 @@ params.observationMatrix = [1, 0, 0, 0; ...
 params.processNoise = diag([25, 25, 9, 9]);
 params.measurementNoise = diag([16, 16]);
 params.initialCovariance = diag([25, 25, 16, 16]);
+params.maxMeasurementNoiseScale = 5.0;
 params.visualizationPause = 0.001;
 
 if isfield(config, 'improvedCamshift') && isstruct(config.improvedCamshift)

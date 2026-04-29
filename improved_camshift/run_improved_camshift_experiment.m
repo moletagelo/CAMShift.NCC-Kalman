@@ -8,6 +8,8 @@ predictedBboxes = nan(sequence.numFrames, 4);
 frameTimes = nan(sequence.numFrames, 1);
 confidenceScores = nan(sequence.numFrames, 1);
 stateHistory = nan(sequence.numFrames, 4);
+peakRatios = nan(sequence.numFrames, 1);
+consecutiveMisses = 0;
 
 firstFrame = local_read_grayscale_frame(sequence.framePaths{1});
 initialBbox = local_clamp_bbox(sequence.groundTruth(1, :), size(firstFrame));
@@ -17,6 +19,7 @@ kalman = initialize_kalman_state([initialCenterXY(2), initialCenterXY(1)], param
 
 predictedBboxes(1, :) = initialBbox;
 confidenceScores(1) = 1;
+peakRatios(1) = inf;
 stateHistory(1, :) = kalman.state.';
 
 for frameIndex = 2:sequence.numFrames
@@ -25,22 +28,24 @@ for frameIndex = 2:sequence.numFrames
 
     [predictedState, predictedCovariance] = kalman_predict_step(kalman.state, kalman.covariance, params);
     predictedCenterRC = predictedState(1:2).';
-    searchInfo = extract_search_window(currentFrame, predictedCenterRC, size(template), params);
-    response = compute_ncc_response(searchInfo.patch, template);
+    dynamicRadius = min(params.maxSearchRadius, ...
+        params.searchRadius + consecutiveMisses * params.searchRadiusGrowthPerMiss);
+    [response, measurement, bestScore, bestRatio, candidateTemplateSize] = ...
+        local_find_best_measurement(currentFrame, predictedCenterRC, template, params, dynamicRadius);
 
-    measurement = [];
-    bestScore = nan;
-    if response.isValid && response.bestScore >= params.minDetectionConfidence
-        matchedTopLeft = searchInfo.topLeft + response.bestLocation - 1;
-        templateSizeRC = [size(template, 1); size(template, 2)];
-        measurement = matchedTopLeft(:) + (templateSizeRC - 1) / 2;
-        bestScore = response.bestScore;
+    updateParams = params;
+    if ~isempty(measurement)
+        updateParams.measurementNoise = params.measurementNoise * ...
+            local_measurement_noise_scale(bestScore, params.maxMeasurementNoiseScale);
+        consecutiveMisses = 0;
+    else
+        consecutiveMisses = min(consecutiveMisses + 1, params.maxConsecutiveMisses);
     end
 
-    [updatedState, updatedCovariance] = kalman_update_step(predictedState, predictedCovariance, measurement, params);
+    [updatedState, updatedCovariance] = kalman_update_step(predictedState, predictedCovariance, measurement, updateParams);
     trackedCenterRC = updatedState(1:2).';
     trackedCenterXY = [trackedCenterRC(2), trackedCenterRC(1)];
-    trackedBbox = local_center_to_bbox(trackedCenterXY, [size(template, 2), size(template, 1)]);
+    trackedBbox = local_center_to_bbox(trackedCenterXY, candidateTemplateSize);
     trackedBbox = local_clamp_bbox(trackedBbox, size(currentFrame));
 
     [candidateTemplate, candidateNearBorder] = local_crop_patch(currentFrame, trackedBbox);
@@ -50,6 +55,7 @@ for frameIndex = 2:sequence.numFrames
     predictedBboxes(frameIndex, :) = trackedBbox;
     frameTimes(frameIndex) = toc(frameStart);
     confidenceScores(frameIndex) = bestScore;
+    peakRatios(frameIndex) = bestRatio;
     stateHistory(frameIndex, :) = updatedState.';
 
     kalman.state = updatedState;
@@ -67,6 +73,7 @@ result.centers = local_compute_centers(predictedBboxes);
 result.scores = confidenceScores;
 result.frameTimes = frameTimes;
 result.stateHistory = stateHistory;
+result.peakRatios = peakRatios;
 
 [centerErrors, overlaps, meanCLE, meanIoU, precisionAt20, successThresholds, successRates, auc, fps] = ...
     evaluate_tracking_results(predictedBboxes, sequence.groundTruth, frameTimes);
@@ -160,4 +167,47 @@ if isfield(sequence, 'sequenceDir')
 else
     name = 'sequence';
 end
+end
+
+function [bestResponse, bestMeasurement, bestScore, bestRatio, bestTemplateSizeWH] = ...
+        local_find_best_measurement(currentFrame, predictedCenterRC, template, params, dynamicRadius)
+    bestResponse = struct('isValid', false, 'bestScore', -Inf, 'peakRatio', 0, 'bestLocation', []);
+    bestMeasurement = [];
+    bestScore = nan;
+    bestRatio = 0;
+    bestTemplateSizeWH = [size(template, 1), size(template, 2)];
+
+    for scaleValue = params.templateScales
+        scaledTemplate = imresize(template, scaleValue);
+        if min(size(scaledTemplate)) < 8
+            continue;
+        end
+
+        tempParams = params;
+        tempParams.searchRadius = dynamicRadius;
+        searchInfo = extract_search_window(currentFrame, predictedCenterRC, size(scaledTemplate), tempParams);
+        response = compute_ncc_response(searchInfo.patch, scaledTemplate);
+        if ~response.isValid
+            continue;
+        end
+
+        if response.bestScore > bestResponse.bestScore
+            bestResponse = response;
+            bestScore = response.bestScore;
+            bestRatio = response.peakRatio;
+            matchedTopLeft = searchInfo.topLeft + response.bestLocation - 1;
+            templateSizeRC = [size(scaledTemplate, 1); size(scaledTemplate, 2)];
+            bestMeasurement = matchedTopLeft(:) + (templateSizeRC - 1) / 2;
+            bestTemplateSizeWH = [size(scaledTemplate, 1), size(scaledTemplate, 2)];
+        end
+    end
+
+    if isempty(bestMeasurement) || bestScore < params.minDetectionConfidence
+        bestMeasurement = [];
+    end
+end
+
+function scaleValue = local_measurement_noise_scale(bestScore, maxScale)
+    boundedScore = min(max(bestScore, 0), 1);
+    scaleValue = 1 + (1 - boundedScore) * (maxScale - 1);
 end

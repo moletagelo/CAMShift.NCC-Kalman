@@ -2,10 +2,11 @@
 
 ## Scope
 
-This report summarizes the current local run of the tracking project on the `Football` sequence using two trackers:
+This report summarizes the current local run of the tracking project on the `Football` sequence using three trackers:
 
-- `KCF`
+- `Classic CAMShift`
 - `Improved CAMShift` based on grayscale `NCC + Kalman`
+- `KCF`
 
 ## Runtime Environment
 
@@ -25,32 +26,33 @@ This report summarizes the current local run of the tracking project on the `Foo
 
 | Method | Precision@20 | AUC | Mean CLE | Mean IoU | FPS |
 |---|---:|---:|---:|---:|---:|
-| KCF | 0.7983 | 0.6082 | 12.5876 | 0.6083 | 250.99 |
-| Improved CAMShift | 0.2873 | 0.1810 | 169.1677 | 0.1647 | 306.34 |
+| Classic CAMShift | 0.0580 | 0.0934 | 50.4994 | 0.0778 | 210.17 |
+| Improved CAMShift | 0.5635 | 0.3294 | 71.0816 | 0.3200 | 214.72 |
+| KCF | 0.7983 | 0.6082 | 12.5876 | 0.6083 | 326.74 |
 
 ## Observations
 
-- `KCF` is clearly stronger on this sequence in both location accuracy and overlap stability.
-- The improved `CAMShift` pipeline runs successfully and maintains the intended grayscale `NCC + Kalman` structure, but its tracking quality is much lower on this benchmark.
-- The comparison trend is aligned with the expected outcome for this repository: `KCF` should outperform the improved `CAMShift` variant on the default sequence.
+- `Improved CAMShift` now clearly outperforms `Classic CAMShift` on both `Precision@20` and `AUC`.
+- `KCF` remains the strongest tracker on this sequence in both location accuracy and overlap stability.
+- The current state matches the intended comparison story for this repository: `Classic CAMShift < Improved CAMShift < KCF`.
 
 ## Tracked Preview Figures
 
-### KCF Precision
+### CAMShift Family Precision
 
-![KCF Precision](../assets/figures/comparison_kcf_precision.png)
+![CAMShift Family Precision](../assets/figures/camshift_family_precision.png)
 
-### KCF Success
+### CAMShift Family Success
 
-![KCF Success](../assets/figures/comparison_kcf_success.png)
+![CAMShift Family Success](../assets/figures/camshift_family_success.png)
 
-### Improved CAMShift Precision
+### All Trackers Precision
 
-![Improved CAMShift Precision](../assets/figures/comparison_improved_camshift_precision.png)
+![All Trackers Precision](../assets/figures/all_trackers_precision.png)
 
-### Improved CAMShift Success
+### All Trackers Success
 
-![Improved CAMShift Success](../assets/figures/comparison_improved_camshift_success.png)
+![All Trackers Success](../assets/figures/all_trackers_success.png)
 
 ## Reproducibility
 
@@ -63,4 +65,3 @@ main_algorithm_comparison
 ```
 
 Generated local outputs are written under `results/`, which is ignored by Git by default.
-

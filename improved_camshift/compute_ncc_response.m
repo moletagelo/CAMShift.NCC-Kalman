@@ -3,6 +3,8 @@ function response = compute_ncc_response(searchPatch, template)
 
 response = struct('responseMap', [], ...
                   'bestScore', -Inf, ...
+                  'secondBestScore', -Inf, ...
+                  'peakRatio', 0, ...
                   'bestLocation', [], ...
                   'isValid', false);
 
@@ -35,10 +37,27 @@ if ~isfinite(bestScore)
     return;
 end
 
+maskedResponse = validResponse;
+maskedResponse(linearIndex) = -Inf;
+secondBestScore = max(maskedResponse(:));
+if ~isfinite(secondBestScore)
+    secondBestScore = -Inf;
+end
+
 [bestRow, bestCol] = ind2sub(size(validResponse), linearIndex);
 
 response.responseMap = validResponse;
 response.bestScore = bestScore;
+response.secondBestScore = secondBestScore;
+response.peakRatio = local_peak_ratio(bestScore, secondBestScore);
 response.bestLocation = [bestRow, bestCol];
 response.isValid = true;
+end
+
+function ratioValue = local_peak_ratio(bestScore, secondBestScore)
+    if ~isfinite(secondBestScore)
+        ratioValue = inf;
+    else
+        ratioValue = (bestScore + 1) / (secondBestScore + 1);
+    end
 end

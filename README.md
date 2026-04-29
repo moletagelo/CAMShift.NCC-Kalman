@@ -73,24 +73,27 @@ Dataset files are intentionally not tracked in Git.
 
 Latest verified run on the local `Football` sequence:
 
-| Method | Precision@20 | AUC | Mean CLE | Mean IoU |
-|---|---:|---:|---:|---:|
-| KCF | 0.7983 | 0.6082 | 12.5876 | 0.6083 |
-| Improved CAMShift | 0.2873 | 0.1810 | 169.1677 | 0.1647 |
+| Method | Precision@20 | AUC | Mean CLE | Mean IoU | FPS |
+|---|---:|---:|---:|---:|---:|
+| Classic CAMShift | 0.0580 | 0.0934 | 50.4994 | 0.0778 | 210.17 |
+| Improved CAMShift | 0.5635 | 0.3294 | 71.0816 | 0.3200 | 214.72 |
+| KCF | 0.7983 | 0.6082 | 12.5876 | 0.6083 | 326.74 |
+
+The current target for the CAMShift branch is not to beat `KCF`, but to make `Improved CAMShift` clearly outperform `Classic CAMShift` while narrowing the gap to `KCF`.
 
 ## Preview Figures
 
-### KCF
+### CAMShift Family
 
-![KCF Precision](assets/figures/comparison_kcf_precision.png)
+![CAMShift Family Precision](assets/figures/camshift_family_precision.png)
 
-![KCF Success](assets/figures/comparison_kcf_success.png)
+![CAMShift Family Success](assets/figures/camshift_family_success.png)
 
-### Improved CAMShift
+### All Trackers
 
-![Improved CAMShift Precision](assets/figures/comparison_improved_camshift_precision.png)
+![All Trackers Precision](assets/figures/all_trackers_precision.png)
 
-![Improved CAMShift Success](assets/figures/comparison_improved_camshift_success.png)
+![All Trackers Success](assets/figures/all_trackers_success.png)
 
 ## Notes On Tracked vs Local Files
 

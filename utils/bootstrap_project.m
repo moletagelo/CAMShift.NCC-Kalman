@@ -10,6 +10,7 @@ function project = bootstrap_project()
         project.root
         fullfile(project.root, 'utils')
         fullfile(project.root, 'preprocessing_detection')
+        fullfile(project.root, 'classic_camshift')
         fullfile(project.root, 'kcf_tracking')
         fullfile(project.root, 'improved_camshift')
         fullfile(project.root, 'experiments_visualization')
