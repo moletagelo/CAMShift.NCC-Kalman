@@ -1,0 +1,46 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.asv
+*.autosave
+*.log
+*.tmp
+*.bak
+
+# Python helpers
+__pycache__/
+*.pyc
+
+# MATLAB generated
+*.mlx.autosave
+slprj/
+
+# Large local datasets and archives
+data/raw/
+data/otb/
+!data/README.md
+
+# Internal planning / local notes
+docs/superpowers/
+goal.txt
+
+# Local reference PDFs
+docs/references/papers/
+
+# Generated experiment outputs
+results/**
+!results/.gitkeep
+
+# Keep curated lightweight assets only
+!assets/
+!assets/figures/
+!assets/figures/*.png
+
+# Optional local videos
+*.mp4
+*.avi
+*.mov
+*.zip
+*.mat
+
