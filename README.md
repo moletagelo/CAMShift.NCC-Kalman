@@ -112,7 +112,6 @@ The current target for the CAMShift branch is not to beat `KCF`, but to make `Im
 
 - Data setup: [data/README.md](data/README.md)
 - Experiment summary: [docs/experiment-report.md](docs/experiment-report.md)
-- Reference links: [docs/references/README.md](docs/references/README.md)
 
 ## References
 
@@ -120,3 +119,4 @@ The current target for the CAMShift branch is not to beat `KCF`, but to make `Im
 - OTB benchmark: [CVF Open Access](https://www.cv-foundation.org/openaccess/content_cvpr_2013/html/Wu_Online_Object_Tracking_2013_CVPR_paper.html)
 - OTB dataset download reference: [OTB-dataset GitHub](https://github.com/prosti221/OTB-dataset)
 - CAMShift background reference: [Bradski PDF](https://www.cse.psu.edu/~rtc12/CSE598G/papers/camshift.pdf)
+- Reference links (Dataset Links inclued): [docs/references/README.md](docs/references/README.md)
